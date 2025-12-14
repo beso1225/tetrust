@@ -41,8 +41,11 @@ fn spawn_block(mut commands: Commands, grid: Res<Grid>) {
         let origin = IVec2::new(GRID_WITH as i32 / 2, GRID_HEIGHT as i32 - 2);
         let block_entity = commands.spawn((
             Transform::from_translation(translation),
-            InheritedVisibility::default(),
-            Block(*shape),
+            Visibility::default(),
+            Block{
+                shape: *shape,
+                state: BlockState::Falling,
+            },
         )).id();
 
         for offset in shape.offsets() {
