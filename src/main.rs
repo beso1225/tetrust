@@ -13,16 +13,20 @@ fn main() {
             }),
             ..default()
         }))
-        .add_systems(Startup, (setup_camera, spawn_block).chain())
+        .add_systems(Startup, setup_camera)
+        .add_systems(Startup, (setup_grid, spawn_blocks).chain())
         .run();
 }
 
 fn setup_camera(mut commands: Commands) {
     commands.spawn(Camera2d);
+}
+
+fn setup_grid(mut commands: Commands) {
     commands.insert_resource(Grid::new());
 }
 
-fn spawn_block(mut commands: Commands, grid: Res<Grid>) {
+fn spawn_blocks(mut commands: Commands, grid: Res<Grid>) {
     let blocks = vec![
         BlockShape::T,
         BlockShape::I,
