@@ -27,18 +27,23 @@ impl BlockShape {
     }
 }
 
-pub enum BlockState {
+pub enum BlockStateEnum {
     Falling,
     Landed,
 }
 
 #[derive(Component)]
-pub struct Block {
-    pub shape: BlockShape,
-    pub state: BlockState,
+pub struct BlockState {
+    pub state: BlockStateEnum,
 }
 
+
 #[derive(Component)]
+pub struct Block {
+    pub shape: BlockShape,
+}
+
+#[derive(Component, Clone, Copy)]
 pub struct Position {
     pub x: i32,
     pub y: i32,

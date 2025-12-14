@@ -1,4 +1,4 @@
-use bevy::prelude::*;
+use bevy::{gizmos::grid, prelude::*};
 
 mod game;
 use game::prelude::*;
@@ -28,7 +28,7 @@ fn setup_grid(mut commands: Commands) {
     commands.insert_resource(Grid::new());
 }
 
-fn spawn_blocks(mut commands: Commands, grid: Res<Grid>) {
+fn spawn_blocks(mut commands: Commands, mut grid: ResMut<Grid>) {
     let blocks = vec![
         BlockShape::T,
         BlockShape::I,
@@ -48,10 +48,9 @@ fn spawn_blocks(mut commands: Commands, grid: Res<Grid>) {
         let block_entity = commands.spawn((
             Transform::from_translation(translation),
             Visibility::default(),
-            Block{
-                shape: *shape,
-                state: BlockState::Falling,
-            },
+            Block{ shape: *shape },
+            BlockState{ state: BlockStateEnum::Falling },
+            Position { x: pos.x, y: pos.y },
         )).id();
 
         for offset in shape.offsets() {
@@ -66,13 +65,15 @@ fn spawn_blocks(mut commands: Commands, grid: Res<Grid>) {
                 },
                 Transform::from_translation(translation),
                 ChildOf(block_entity),
+                Position { x: cell.x, y: cell.y },
             ));
+            grid.set(cell.x, cell.y, Some(*shape));
         }
         pos.y -= 3;
     }
 }
 
-fn spawn_t_block(mut commands: Commands, grid: Res<Grid>) {
+fn spawn_t_block(mut commands: Commands, mut grid: ResMut<Grid>) {
     let shape = BlockShape::T;
     let pos = IVec2::new(5, 12);
     let translation = grid.grid_to_world(pos.x, pos.y);
@@ -81,10 +82,9 @@ fn spawn_t_block(mut commands: Commands, grid: Res<Grid>) {
     let block_entity = commands.spawn((
         Transform::from_translation(translation),
         Visibility::default(),
-        Block{
-            shape,
-            state: BlockState::Falling,
-        },
+        Block{ shape },
+        BlockState{ state: BlockStateEnum::Falling },
+        Position { x: pos.x, y: pos.y },
     )).id();
 
     for offset in shape.offsets() {
@@ -101,15 +101,39 @@ fn spawn_t_block(mut commands: Commands, grid: Res<Grid>) {
             Position { x: cell.x, y: cell.y },
         ));
     }
+    grid.set(pos.x, pos.y, Some(shape));
 }
 
 fn move_block(
     keyboard_input: Res<ButtonInput<KeyCode>>,
-    mut block_transform: Single<&mut Transform, With<Block>>,
+    block_query: Single<(&mut Transform, &mut Position, &BlockState), With<Block>>,
+    mut grid: ResMut<Grid>,
 ) {
-    if keyboard_input.just_pressed(KeyCode::ArrowLeft) {
-            block_transform.translation.x -= CELL_SIZE;
-    } else if keyboard_input.just_pressed(KeyCode::ArrowRight) {
-            block_transform.translation.x += CELL_SIZE;
+    let (mut transform, mut position, block_state) = block_query.into_inner();
+    match grid.idx(position.x, position.y) {
+        Some(_) => {
+            let old_position = position.clone();
+            let mut new_position = position.clone();
+            if let BlockStateEnum::Falling = block_state.state {
+                if keyboard_input.just_pressed(KeyCode::ArrowLeft) {
+                    new_position.x -= 1;
+                }
+                if keyboard_input.just_pressed(KeyCode::ArrowRight) {
+                    new_position.x += 1;
+                }
+                if keyboard_input.just_pressed(KeyCode::ArrowDown) {
+                    new_position.y -= 1;
+                }
+
+                let new_translation = grid.grid_to_world(new_position.x, new_position.y);
+                if grid.can_move(old_position.x, old_position.y, new_position.x, new_position.y) {
+                    grid.move_shape(old_position.x, old_position.y, new_position.x, new_position.y);
+                    position.x = new_position.x;
+                    position.y = new_position.y;
+                    transform.translation = new_translation;
+                }
+            }
+        },
+        _ => {}
     }
 }
