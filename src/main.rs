@@ -1,4 +1,4 @@
-use bevy::{gizmos::grid, prelude::*};
+use bevy::prelude::*;
 
 mod game;
 use game::prelude::*;
