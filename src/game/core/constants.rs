@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 
 pub const GRID_WITH: usize = 10;
-pub const GRID_HEIGHT: usize = 20;
+pub const GRID_HEIGHT: usize = 24;
 pub const CELL_SIZE: f32 = 24.0;
 
 // definitions of block offsets
