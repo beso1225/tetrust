@@ -5,6 +5,7 @@ use game::prelude::*;
 use game::plugins::debug::DebugPlugin;
 use game::system::physics::block_movement;
 use game::system::spawn::spawn_block;
+use game::system::ui::next_block_preview;
 
 fn main() {
     App::new()
@@ -23,9 +24,11 @@ fn main() {
         .add_systems(Startup, (
             setup_grid,
             spawn_first_block,
+            next_block_preview::spawn_next_block_preview,
         ).chain())
         .add_systems(Update, block_movement::move_block_manual)
         .add_systems(Update, block_movement::move_block_auto)
+        .add_systems(Update, next_block_preview::update_next_block_preview)
         .run();
 }
 

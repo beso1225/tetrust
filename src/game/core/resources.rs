@@ -120,13 +120,16 @@ pub struct AutoMoveTimer(pub Timer);
 #[derive(Resource)]
 pub struct BlockBag {
     bag: Vec<BlockShape>,
+    next_bag: Vec<BlockShape>,
 }
 
 impl BlockBag {
     pub fn new() -> Self {
         let mut bag = Self::create_new_bag();
         bag.reverse(); // reverse so we can pop from end
-        Self { bag }
+        let mut next_bag = Self::create_new_bag();
+        next_bag.reverse();
+        Self { bag, next_bag }
     }
 
     fn create_new_bag() -> Vec<BlockShape> {
@@ -147,9 +150,57 @@ impl BlockBag {
 
     pub fn next(&mut self) -> BlockShape {
         if self.bag.is_empty() {
-            self.bag = Self::create_new_bag();
-            self.bag.reverse();
+            // Switch to the next bag and prepare a new next_bag
+            self.bag = std::mem::take(&mut self.next_bag);
+            self.next_bag = Self::create_new_bag();
+            self.next_bag.reverse();
         }
         self.bag.pop().expect("bag should not be empty")
+    }
+
+    pub fn peek(&mut self) -> BlockShape {
+        if self.bag.is_empty() {
+            // Switch to the next bag and prepare a new next_bag
+            self.bag = std::mem::take(&mut self.next_bag);
+            self.next_bag = Self::create_new_bag();
+            self.next_bag.reverse();
+        }
+        *self.bag.last().expect("bag should not be empty")
+    }
+
+    pub fn peek_multiple(&self, count: usize) -> Vec<BlockShape> {
+        let mut result = Vec::with_capacity(count);
+        let mut remaining = count;
+        let bag_len = self.bag.len();
+
+        // First, get items from current bag (reversed, so iterate from end)
+        let available = bag_len.min(remaining);
+        for i in 0..available {
+            result.push(self.bag[bag_len - 1 - i]);
+        }
+        remaining -= available;
+
+        // If we need more, get from next_bag
+        if remaining > 0 {
+            let next_bag_len = self.next_bag.len();
+            let take = next_bag_len.min(remaining);
+            for i in 0..take {
+                result.push(self.next_bag[next_bag_len - 1 - i]);
+            }
+            remaining -= take;
+        }
+
+        // If we still need more, simulate additional future bags
+        while remaining > 0 {
+            let future_bag = Self::create_new_bag();
+            let take = future_bag.len().min(remaining);
+            // Take from the end since we'll reverse it
+            for i in (future_bag.len() - take..future_bag.len()).rev() {
+                result.push(future_bag[i]);
+            }
+            remaining -= take;
+        }
+
+        result
     }
 }
