@@ -113,3 +113,6 @@ impl Grid {
         Vec3::new(world_x, world_y, 0.0)
     }
 }
+
+#[derive(Resource)]
+pub struct AutoMoveTimer(pub Timer);

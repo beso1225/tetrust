@@ -3,7 +3,7 @@ use crate::game::prelude::*;
 
 pub fn spawn_t_block(mut commands: Commands, mut grid: ResMut<Grid>) {
     let shape = BlockShape::T;
-    let pos = IVec2::new(5, 12);
+    let pos = IVec2::new(INITIAL_SPAWN_GRID_X, INITIAL_SPAWN_GRID_Y);
     let translation = grid.grid_to_world(pos.x, pos.y);
 
     let block_entity = commands.spawn((
@@ -36,7 +36,7 @@ pub fn spawn_t_block(mut commands: Commands, mut grid: ResMut<Grid>) {
 
 pub fn spawn_l_block(mut commands: Commands, mut grid: ResMut<Grid>) {
     let shape = BlockShape::L;
-    let pos = IVec2::new(5, 10);
+    let pos = IVec2::new(5, 0);
     let translation = grid.grid_to_world(pos.x, pos.y);
 
     let block_entity = commands.spawn((

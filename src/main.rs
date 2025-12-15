@@ -2,7 +2,7 @@ use bevy::prelude::*;
 
 mod game;
 use game::prelude::*;
-use game::system::debug::grid;
+use game::plugins::debug::DebugPlugin;
 use game::system::physics::block_movement;
 use game::system::spawn::spawn_block;
 
@@ -11,11 +11,13 @@ fn main() {
         .add_plugins(DefaultPlugins.set(WindowPlugin {
             primary_window: Some(Window {
                 title: "Tetrust".into(),
-                resolution: (1200, 800).into(),
+                resolution: (600, 800).into(),
                 ..default()
             }),
             ..default()
         }))
+        .add_plugins(DebugPlugin)
+        .insert_resource(AutoMoveTimer(Timer::from_seconds(1.0, TimerMode::Repeating)))
         .add_systems(Startup, setup_camera)
         // .add_systems(Startup, (setup_grid, spawn_blocks).chain())
         .add_systems(Startup, (
@@ -24,7 +26,7 @@ fn main() {
             spawn_block::spawn_t_block,
         ).chain())
         .add_systems(Update, block_movement::move_block_manual)
-        .add_systems(Update, grid::show_grid)
+        .add_systems(Update, block_movement::move_block_auto)
         .run();
 }
 
