@@ -116,3 +116,40 @@ impl Grid {
 
 #[derive(Resource)]
 pub struct AutoMoveTimer(pub Timer);
+
+#[derive(Resource)]
+pub struct BlockBag {
+    bag: Vec<BlockShape>,
+}
+
+impl BlockBag {
+    pub fn new() -> Self {
+        let mut bag = Self::create_new_bag();
+        bag.reverse(); // reverse so we can pop from end
+        Self { bag }
+    }
+
+    fn create_new_bag() -> Vec<BlockShape> {
+        use rand::seq::SliceRandom;
+        use rand::thread_rng;
+        let mut shapes = vec![
+            BlockShape::T,
+            BlockShape::I,
+            BlockShape::O,
+            BlockShape::L,
+            BlockShape::J,
+            BlockShape::S,
+            BlockShape::Z,
+        ];
+        shapes.shuffle(&mut thread_rng());
+        shapes
+    }
+
+    pub fn next(&mut self) -> BlockShape {
+        if self.bag.is_empty() {
+            self.bag = Self::create_new_bag();
+            self.bag.reverse();
+        }
+        self.bag.pop().expect("bag should not be empty")
+    }
+}

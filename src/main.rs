@@ -18,12 +18,11 @@ fn main() {
         }))
         .add_plugins(DebugPlugin)
         .insert_resource(AutoMoveTimer(Timer::from_seconds(1.0, TimerMode::Repeating)))
+        .insert_resource(BlockBag::new())
         .add_systems(Startup, setup_camera)
-        // .add_systems(Startup, (setup_grid, spawn_blocks).chain())
         .add_systems(Startup, (
             setup_grid,
-            spawn_block::spawn_l_block,
-            spawn_block::spawn_t_block,
+            spawn_first_block,
         ).chain())
         .add_systems(Update, block_movement::move_block_manual)
         .add_systems(Update, block_movement::move_block_auto)
@@ -36,4 +35,9 @@ fn setup_camera(mut commands: Commands) {
 
 fn setup_grid(mut commands: Commands) {
     commands.insert_resource(Grid::new());
+}
+
+fn spawn_first_block(commands: Commands, grid: ResMut<Grid>, mut bag: ResMut<BlockBag>) {
+    let shape = bag.next();
+    spawn_block::spawn_block(shape, commands, grid);
 }

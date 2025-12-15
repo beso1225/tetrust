@@ -1,15 +1,14 @@
 use bevy::prelude::*;
 use crate::game::prelude::*;
 
-pub fn spawn_t_block(mut commands: Commands, mut grid: ResMut<Grid>) {
-    let shape = BlockShape::T;
+pub fn spawn_block(shape: BlockShape, mut commands: Commands, mut grid: ResMut<Grid>) {
     let pos = IVec2::new(INITIAL_SPAWN_GRID_X, INITIAL_SPAWN_GRID_Y);
     // check either can spawn
     for offset in shape.offsets() {
         let cell = pos + *offset;
         if let Some(Some(_)) = grid.idx(cell.x, cell.y) {
             // occupied
-            info!("Cannot spawn T block at {:?}, occupied", cell);
+            info!("Cannot spawn block {:?} at {:?}, occupied", shape, cell);
             return;
         }
     }
