@@ -10,6 +10,7 @@ pub struct Grid {
     cell_size: f32,
 }
 
+#[allow(dead_code)]
 impl Grid {
     pub fn new() -> Self {
         Self {
@@ -123,6 +124,7 @@ pub struct BlockBag {
     next_bag: Vec<BlockShape>,
 }
 
+#[allow(dead_code)]
 impl BlockBag {
     pub fn new() -> Self {
         let mut bag = Self::create_new_bag();

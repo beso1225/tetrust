@@ -37,7 +37,7 @@ pub fn move_block_manual(
 }
 
 pub fn move_block_auto(
-    mut commands: Commands,
+    commands: Commands,
     time: Res<Time>,
     mut timer: ResMut<AutoMoveTimer>,
     mut block_query: Query<(Entity, &mut Transform, &mut Position, &mut BlockState), With<Block>>,
