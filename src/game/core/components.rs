@@ -2,7 +2,7 @@ use bevy::prelude::*;
 
 use crate::game::prelude::*;
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum BlockShape {
     T,
     I,
@@ -27,5 +27,24 @@ impl BlockShape {
     }
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum BlockStateEnum {
+    Falling,
+    Landed,
+}
+
+#[derive(Component, Debug)]
+pub struct BlockState {
+    pub state: BlockStateEnum,
+    pub shape: BlockShape,
+}
+
+
 #[derive(Component)]
-pub struct Block (pub BlockShape);
+pub struct Block;
+
+#[derive(Component, Clone, Copy)]
+pub struct Position {
+    pub x: i32,
+    pub y: i32,
+}

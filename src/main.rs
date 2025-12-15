@@ -2,63 +2,38 @@ use bevy::prelude::*;
 
 mod game;
 use game::prelude::*;
+use game::plugins::debug::DebugPlugin;
+use game::system::physics::block_movement;
+use game::system::spawn::spawn_block;
 
 fn main() {
     App::new()
         .add_plugins(DefaultPlugins.set(WindowPlugin {
             primary_window: Some(Window {
                 title: "Tetrust".into(),
-                resolution: (1200, 800).into(),
+                resolution: (600, 800).into(),
                 ..default()
             }),
             ..default()
         }))
-        .add_systems(Startup, (setup_camera, spawn_block).chain())
+        .add_plugins(DebugPlugin)
+        .insert_resource(AutoMoveTimer(Timer::from_seconds(1.0, TimerMode::Repeating)))
+        .add_systems(Startup, setup_camera)
+        // .add_systems(Startup, (setup_grid, spawn_blocks).chain())
+        .add_systems(Startup, (
+            setup_grid,
+            spawn_block::spawn_l_block,
+            spawn_block::spawn_t_block,
+        ).chain())
+        .add_systems(Update, block_movement::move_block_manual)
+        .add_systems(Update, block_movement::move_block_auto)
         .run();
 }
 
 fn setup_camera(mut commands: Commands) {
     commands.spawn(Camera2d);
-    commands.insert_resource(Grid::new());
 }
 
-fn spawn_block(mut commands: Commands, grid: Res<Grid>) {
-    let blocks = vec![
-        BlockShape::T,
-        BlockShape::I,
-        BlockShape::O,
-        BlockShape::L,
-        BlockShape::J,
-        BlockShape::S,
-        BlockShape::Z,
-    ];
-
-    let mut pos = IVec2::new(5, 12);
-
-    for shape in &blocks {
-        info!("Block Shape: {:?}", shape);
-        let translation = grid.grid_to_world(pos.x, pos.y);
-        let origin = IVec2::new(GRID_WITH as i32 / 2, GRID_HEIGHT as i32 - 2);
-        let block_entity = commands.spawn((
-            Transform::from_translation(translation),
-            InheritedVisibility::default(),
-            Block(*shape),
-        )).id();
-
-        for offset in shape.offsets() {
-            info!("Offset: {:?}", offset);
-            let cell = origin + *offset;
-            let translation = grid.grid_to_world(cell.x, cell.y);
-            commands.spawn((
-                Sprite {
-                    color: Color::srgb(0.6, 0.2, 0.8),
-                    custom_size: Some(Vec2::splat(CELL_SIZE)),
-                    ..default()
-                },
-                Transform::from_translation(translation),
-                ChildOf(block_entity),
-            ));
-        }
-        pos.y -= 3;
-    }
+fn setup_grid(mut commands: Commands) {
+    commands.insert_resource(Grid::new());
 }
