@@ -42,6 +42,7 @@ pub fn move_block_auto(
     mut timer: ResMut<AutoMoveTimer>,
     mut block_query: Query<(Entity, &mut Transform, &mut Position, &mut BlockState), With<Block>>,
     mut grid: ResMut<Grid>,
+    mut bag: ResMut<BlockBag>,
 ) {
     // 1 秒に 1 回だけ処理するタイマー
     if !timer.0.tick(time.delta()).is_finished() {
@@ -73,6 +74,7 @@ pub fn move_block_auto(
 
     if need_spawn_new {
         // Spawn a new falling block at the initial spawn position
-        spawn_block::spawn_t_block(commands, grid);
+        let shape = bag.next();
+        spawn_block::spawn_block(shape, commands, grid);
     }
 }
