@@ -35,13 +35,12 @@ pub enum BlockStateEnum {
 #[derive(Component)]
 pub struct BlockState {
     pub state: BlockStateEnum,
+    pub shape: BlockShape,
 }
 
 
 #[derive(Component)]
-pub struct Block {
-    pub shape: BlockShape,
-}
+pub struct Block;
 
 #[derive(Component, Clone, Copy)]
 pub struct Position {
