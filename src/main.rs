@@ -6,6 +6,7 @@ use game::plugins::debug::DebugPlugin;
 use game::system::physics::block_movement;
 use game::system::spawn::spawn_block;
 use game::system::ui::next_block_preview;
+use game::system::ui::walls;
 
 fn main() {
     App::new()
@@ -23,6 +24,7 @@ fn main() {
         .add_systems(Startup, setup_camera)
         .add_systems(Startup, (
             setup_grid,
+            walls::spawn_walls,
             spawn_first_block,
             next_block_preview::spawn_next_block_preview,
         ).chain())
