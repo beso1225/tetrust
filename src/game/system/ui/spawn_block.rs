@@ -51,3 +51,8 @@ pub fn spawn_block(shape: BlockShape, mut commands: Commands, mut grid: ResMut<G
         grid.set_entity(cell.x, cell.y, block_entity, child_entity);
     }
 }
+
+pub fn spawn_first_block(commands: Commands, grid: ResMut<Grid>, mut bag: ResMut<BlockBag>) {
+    let shape = bag.next();
+    spawn_block(shape, commands, grid);
+}
