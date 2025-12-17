@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-use crate::game::{prelude::*, system::{physics::clear_line::clear_full_lines, spawn::spawn_block}};
+use crate::game::{prelude::*, system::{physics::clear_line::clear_full_lines, ui::spawn_block}};
 
 pub fn move_block_manual(
     keyboard_input: Res<ButtonInput<KeyCode>>,
