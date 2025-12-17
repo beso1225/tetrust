@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-use crate::game::{prelude::*, system::spawn::spawn_block};
+use crate::game::{prelude::*, system::{physics::clear_line::clear_full_lines, spawn::spawn_block}};
 
 pub fn move_block_manual(
     keyboard_input: Res<ButtonInput<KeyCode>>,
@@ -37,7 +37,7 @@ pub fn move_block_manual(
 }
 
 pub fn move_block_auto(
-    commands: Commands,
+    mut commands: Commands,
     time: Res<Time>,
     mut timer: ResMut<AutoMoveTimer>,
     mut block_query: Query<(Entity, &mut Transform, &mut Position, &mut BlockState), With<Block>>,
@@ -74,6 +74,7 @@ pub fn move_block_auto(
 
     if need_spawn_new {
         // Spawn a new falling block at the initial spawn position
+        clear_full_lines(commands.reborrow(), grid.reborrow(), block_query);
         let shape = bag.next();
         spawn_block::spawn_block(shape, commands, grid);
     }

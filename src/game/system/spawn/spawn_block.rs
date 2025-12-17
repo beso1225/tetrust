@@ -38,15 +38,16 @@ pub fn spawn_block(shape: BlockShape, mut commands: Commands, mut grid: ResMut<G
             (*offset).y as f32 * CELL_SIZE,
             0.0,
         );
-        commands.spawn((
+        let child_entity = commands.spawn((
             Sprite {
                 color,
                 custom_size: Some(Vec2::splat(CELL_SIZE)),
                 ..default()
             },
             Transform::from_translation(local),
+            ChildBlock,
             ChildOf(block_entity),
-        ));
-        grid.set_entity(cell.x, cell.y, Some(block_entity));
+        )).id();
+        grid.set_entity(cell.x, cell.y, block_entity, child_entity);
     }
 }
