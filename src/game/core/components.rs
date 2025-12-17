@@ -83,7 +83,7 @@ pub enum WallPosition {
 impl WallPosition {
     fn position(&self) -> Vec2 {
         let wall_thickness = CELL_SIZE * 0.5;
-        let half_width = (GRID_WITH as f32 / 2.0) * CELL_SIZE;
+        let half_width = (GRID_WIDTH as f32 / 2.0) * CELL_SIZE;
         let half_height = (GRID_HEIGHT as f32 / 2.0) * CELL_SIZE;
 
         match self {
@@ -107,7 +107,7 @@ impl WallPosition {
 
     fn size(&self) -> Vec2 {
         let grid_height = GRID_HEIGHT as f32 * CELL_SIZE;
-        let grid_width = GRID_WITH as f32 * CELL_SIZE;
+        let grid_width = GRID_WIDTH as f32 * CELL_SIZE;
         let wall_thickness = CELL_SIZE * 0.5; // Make walls thinner
 
         match self {

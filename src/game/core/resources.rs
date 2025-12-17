@@ -4,7 +4,7 @@ use crate::game::prelude::*;
 
 #[derive(Resource)]
 pub struct Grid {
-    cells: [[Option<Entity>; GRID_WITH]; GRID_HEIGHT],
+    cells: [[Option<Entity>; GRID_WIDTH]; GRID_HEIGHT],
     width: usize,
     height: usize,
     cell_size: f32,
@@ -14,8 +14,8 @@ pub struct Grid {
 impl Grid {
     pub fn new() -> Self {
         Self {
-            cells: [[None; GRID_WITH]; GRID_HEIGHT],
-            width: GRID_WITH,
+            cells: [[None; GRID_WIDTH]; GRID_HEIGHT],
+            width: GRID_WIDTH,
             height: GRID_HEIGHT,
             cell_size: CELL_SIZE,
         }
