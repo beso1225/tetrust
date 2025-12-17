@@ -4,7 +4,8 @@ use crate::game::prelude::*;
 
 #[derive(Resource)]
 pub struct Grid {
-    cells: [[Option<Entity>; GRID_WIDTH]; GRID_HEIGHT],
+    // Each cell stores (parent_entity, child_entity) pair
+    cells: [[Option<(Entity, Entity)>; GRID_WIDTH]; GRID_HEIGHT],
     width: usize,
     height: usize,
     cell_size: f32,
@@ -46,14 +47,24 @@ impl Grid {
         self.height
     }
 
-    pub fn set_entity(&mut self, x: i32, y: i32, entity: Option<Entity>) {
+    pub fn set_entity(&mut self, x: i32, y: i32, parent: Entity, child: Entity) {
         if (0..self.width as i32).contains(&x) && (0..self.height as i32).contains(&y) {
-            self.cells[y as usize][x as usize] = entity;
+            self.cells[y as usize][x as usize] = Some((parent, child));
         }
     }
 
+    pub fn clear_cell(&mut self, x: i32, y: i32) {
+        if (0..self.width as i32).contains(&x) && (0..self.height as i32).contains(&y) {
+            self.cells[y as usize][x as usize] = None;
+        }
+    }
+
+    pub fn replace_cells(&mut self, new_cells: [[Option<(Entity, Entity)>; GRID_WIDTH]; GRID_HEIGHT]) {
+        self.cells = new_cells;
+    }
+
     pub fn can_move(&mut self, old_x: i32, old_y: i32, new_x: i32, new_y: i32) -> bool {
-        if let Some(_entity) = self.idx(old_x, old_y).and_then(|s| *s) {
+        if self.idx(old_x, old_y).is_some_and(|s| s.is_some()) {
             match self.idx(new_x, new_y) {
                     Some(None) => {return true;}
                 _ => {}
@@ -62,16 +73,16 @@ impl Grid {
         false
     }
 
-    pub fn can_move_entity(&mut self,entity: Entity, shape: BlockShape, old_x: i32, old_y: i32, new_x: i32, new_y: i32) -> bool {
+    pub fn can_move_entity(&mut self, entity: Entity, shape: BlockShape, old_x: i32, old_y: i32, new_x: i32, new_y: i32) -> bool {
         let old_origin = IVec2::new(old_x, old_y);
         for offset in shape.offsets() {
             let cell = old_origin + *offset;
-            if let Some(Some(owner)) = self.idx(cell.x, cell.y) {
+            if let Some(Some((owner, _))) = self.idx(cell.x, cell.y) {
                 if *owner == entity {
                     let new_cell = IVec2::new(new_x, new_y) + *offset;
                     match self.idx(new_cell.x, new_cell.y) {
                         Some(None) => {}
-                        Some(Some(other_entity)) if *other_entity == entity => {}
+                        Some(Some((other_entity, _))) if *other_entity == entity => {}
                         _ => {
                             return false;
                         }
@@ -82,25 +93,34 @@ impl Grid {
         true
     }
 
-    pub fn move_entity(&mut self,entity: Entity, shape: BlockShape, old_x: i32, old_y: i32, new_x: i32, new_y: i32) {
+    pub fn move_entity(&mut self, entity: Entity, shape: BlockShape, old_x: i32, old_y: i32, new_x: i32, new_y: i32) {
+        // First, collect child entities from old positions
+        let mut children_to_move = Vec::new();
         let old_origin = IVec2::new(old_x, old_y);
         for offset in shape.offsets() {
             let cell = old_origin + *offset;
-            if let Some(Some(owner)) = self.idx(cell.x, cell.y) {
+            if let Some(Some((owner, child))) = self.idx(cell.x, cell.y) {
                 if *owner == entity {
-                    self.set_entity(cell.x, cell.y, None);
+                    children_to_move.push((*owner, *child));
+                    self.clear_cell(cell.x, cell.y);
                 }
             }
         }
 
+        // Then set new positions
         let new_origin = IVec2::new(new_x, new_y);
+        let mut index = 0;
         for offset in shape.offsets() {
             let cell = new_origin + *offset;
-            self.set_entity(cell.x, cell.y, Some(entity));
+            if index < children_to_move.len() {
+                let (parent, child) = children_to_move[index];
+                self.set_entity(cell.x, cell.y, parent, child);
+                index += 1;
+            }
         }
     }
 
-    pub fn idx(&self, x: i32, y: i32) -> Option<&Option<Entity>> {
+    pub fn idx(&self, x: i32, y: i32) -> Option<&Option<(Entity, Entity)>> {
         if (0..self.width as i32).contains(&x) && (0..self.height as i32).contains(&y) {
             Some(&self.cells[y as usize][x as usize])
         } else {
@@ -112,6 +132,20 @@ impl Grid {
         let world_x = ((x as f32) - self.width as f32 / 2.0) * self.cell_size;
         let world_y = ((y as f32) - self.height as f32 / 2.0) * self.cell_size;
         Vec3::new(world_x, world_y, 0.0)
+    }
+
+    pub fn despawn(&mut self, mut commands: Commands, x: i32, y: i32) {
+        if let Some(Some((_parent, child))) = self.idx(x, y) {
+            commands.entity(*child).despawn();
+            self.clear_cell(x, y);
+        }
+    }
+
+    pub fn move_single(&mut self, old_x: i32, old_y: i32, new_x: i32, new_y: i32) {
+        if let Some(Some((parent, child))) = self.idx(old_x, old_y) {
+            self.set_entity(new_x, new_y, *parent, *child);
+            self.clear_cell(old_x, old_y);
+        }
     }
 }
 

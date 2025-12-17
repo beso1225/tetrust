@@ -50,6 +50,9 @@ pub struct Position {
 }
 
 #[derive(Component)]
+pub struct ChildBlock;
+
+#[derive(Component)]
 pub struct NextBlockPreview;
 
 #[derive(Component)]
