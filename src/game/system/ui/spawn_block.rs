@@ -1,7 +1,8 @@
-use bevy::prelude::*;
 use crate::game::prelude::*;
+use bevy::prelude::*;
 
-pub fn spawn_block(shape: BlockShape, mut commands: Commands, mut grid: ResMut<Grid>) {
+pub fn spawn_block(mut commands: Commands, mut grid: ResMut<Grid>, mut bag: ResMut<BlockBag>) {
+    let shape = bag.next();
     let pos = IVec2::new(INITIAL_SPAWN_GRID_X, INITIAL_SPAWN_GRID_Y);
     // check either can spawn
     for offset in shape.offsets() {
@@ -23,13 +24,18 @@ pub fn spawn_block(shape: BlockShape, mut commands: Commands, mut grid: ResMut<G
         BlockShape::Z => Z_COLOR,
     };
 
-    let block_entity = commands.spawn((
-        Transform::from_translation(translation),
-        Visibility::default(),
-        Block,
-        BlockState{ state: BlockStateEnum::Falling, shape},
-        Position { x: pos.x, y: pos.y },
-    )).id();
+    let block_entity = commands
+        .spawn((
+            Transform::from_translation(translation),
+            Visibility::default(),
+            Block,
+            BlockState {
+                state: BlockStateEnum::Falling,
+                shape,
+            },
+            Position { x: pos.x, y: pos.y },
+        ))
+        .id();
 
     for offset in shape.offsets() {
         let cell = pos + *offset;
@@ -38,21 +44,18 @@ pub fn spawn_block(shape: BlockShape, mut commands: Commands, mut grid: ResMut<G
             (*offset).y as f32 * CELL_SIZE,
             0.0,
         );
-        let child_entity = commands.spawn((
-            Sprite {
-                color,
-                custom_size: Some(Vec2::splat(CELL_SIZE)),
-                ..default()
-            },
-            Transform::from_translation(local),
-            ChildBlock,
-            ChildOf(block_entity),
-        )).id();
+        let child_entity = commands
+            .spawn((
+                Sprite {
+                    color,
+                    custom_size: Some(Vec2::splat(CELL_SIZE)),
+                    ..default()
+                },
+                Transform::from_translation(local),
+                ChildBlock,
+                ChildOf(block_entity),
+            ))
+            .id();
         grid.set_entity(cell.x, cell.y, block_entity, child_entity);
     }
-}
-
-pub fn spawn_first_block(commands: Commands, grid: ResMut<Grid>, mut bag: ResMut<BlockBag>) {
-    let shape = bag.next();
-    spawn_block(shape, commands, grid);
 }

@@ -1,12 +1,18 @@
+use crate::game::{
+    prelude::*,
+    system::{physics::clear_line::clear_full_lines, ui::spawn_block},
+};
 use bevy::prelude::*;
-use crate::game::{prelude::*, system::{physics::clear_line::clear_full_lines, ui::spawn_block}};
 
 pub fn move_block_manual(
+    mut commands: Commands,
     keyboard_input: Res<ButtonInput<KeyCode>>,
-    mut block_query: Query<(Entity, &mut Transform, &mut Position, &BlockState), With<Block>>,
+    mut block_query: Query<(Entity, &mut Transform, &mut Position, &mut BlockState), With<Block>>,
     mut grid: ResMut<Grid>,
+    bag: ResMut<BlockBag>,
 ) {
-    for (entity, mut transform, mut position, block_state) in block_query.iter_mut() {
+    let mut hard_drop = false;
+    for (entity, mut transform, mut position, mut block_state) in block_query.iter_mut() {
         match block_state.state {
             BlockStateEnum::Landed => continue,
             BlockStateEnum::Falling => {}
@@ -27,12 +33,47 @@ pub fn move_block_manual(
             new_y += 1;
         }
 
-        if grid.can_move_entity(entity, block_state.shape, position.x, position.y, new_x, new_y) {
-            grid.move_entity(entity, block_state.shape, position.x, position.y, new_x, new_y);
+        // press h: hard drop
+        if keyboard_input.just_pressed(KeyCode::KeyH) {
+            hard_drop = true;
+            while grid.can_move_entity(
+                entity,
+                block_state.shape,
+                position.x,
+                position.y,
+                new_x,
+                new_y - 1,
+            ) {
+                new_y -= 1;
+            }
+            block_state.state = BlockStateEnum::Landed;
+        }
+
+        if grid.can_move_entity(
+            entity,
+            block_state.shape,
+            position.x,
+            position.y,
+            new_x,
+            new_y,
+        ) {
+            grid.move_entity(
+                entity,
+                block_state.shape,
+                position.x,
+                position.y,
+                new_x,
+                new_y,
+            );
             position.x = new_x;
             position.y = new_y;
             transform.translation = grid.grid_to_world(new_x, new_y);
         }
+    }
+
+    if hard_drop {
+        clear_full_lines(commands.reborrow(), grid.reborrow(), block_query);
+        spawn_block::spawn_block(commands, grid, bag);
     }
 }
 
@@ -42,7 +83,7 @@ pub fn move_block_auto(
     mut timer: ResMut<AutoMoveTimer>,
     mut block_query: Query<(Entity, &mut Transform, &mut Position, &mut BlockState), With<Block>>,
     mut grid: ResMut<Grid>,
-    mut bag: ResMut<BlockBag>,
+    bag: ResMut<BlockBag>,
 ) {
     // 1 秒に 1 回だけ処理するタイマー
     if !timer.0.tick(time.delta()).is_finished() {
@@ -59,23 +100,35 @@ pub fn move_block_auto(
         let new_x = position.x;
         let new_y = position.y - 1; // 下方向へ 1 マス
 
-        if grid.can_move_entity(entity, block_state.shape, position.x, position.y, new_x, new_y) {
-            grid.move_entity(entity, block_state.shape, position.x, position.y, new_x, new_y);
+        if grid.can_move_entity(
+            entity,
+            block_state.shape,
+            position.x,
+            position.y,
+            new_x,
+            new_y,
+        ) {
+            grid.move_entity(
+                entity,
+                block_state.shape,
+                position.x,
+                position.y,
+                new_x,
+                new_y,
+            );
             position.x = new_x;
             position.y = new_y;
             transform.translation = grid.grid_to_world(new_x, new_y);
         } else {
             // if cannot move down, change state to Landed and request spawn
-            block_state.state = BlockStateEnum::Landed;
             need_spawn_new = true;
-            break;
+            block_state.state = BlockStateEnum::Landed;
         }
     }
 
     if need_spawn_new {
         // Spawn a new falling block at the initial spawn position
         clear_full_lines(commands.reborrow(), grid.reborrow(), block_query);
-        let shape = bag.next();
-        spawn_block::spawn_block(shape, commands, grid);
+        spawn_block::spawn_block(commands, grid, bag);
     }
 }
