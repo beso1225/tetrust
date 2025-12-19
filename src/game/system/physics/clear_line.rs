@@ -50,11 +50,15 @@ pub fn clear_full_lines(
     }
 
     // Rebuild grid in one pass to avoid overwrite; track parent drops
-    let mut new_cells: [[Option<(Entity, Entity)>; GRID_WIDTH]; GRID_HEIGHT] = [[None; GRID_WIDTH]; GRID_HEIGHT];
+    let mut new_cells: [[Option<(Entity, Entity)>; GRID_WIDTH]; GRID_HEIGHT] =
+        [[None; GRID_WIDTH]; GRID_HEIGHT];
     let mut parent_drop: HashMap<Entity, i32> = HashMap::new();
 
     for y in 0..GRID_HEIGHT as i32 {
-        let drop = full_lines.iter().filter(|&&cleared_y| cleared_y < y).count() as i32;
+        let drop = full_lines
+            .iter()
+            .filter(|&&cleared_y| cleared_y < y)
+            .count() as i32;
         for x in 0..GRID_WIDTH as i32 {
             if let Some(Some((parent, child))) = grid.idx(x, y) {
                 let parent = *parent;
