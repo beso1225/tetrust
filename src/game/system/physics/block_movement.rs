@@ -27,6 +27,13 @@ pub fn move_block_manual(
             new_y += 1;
         }
 
+        // press h: hard drop
+        if keyboard_input.just_pressed(KeyCode::KeyH) {
+            while grid.can_move_entity(entity, block_state.shape, position.x, position.y, new_x, new_y - 1) {
+                new_y -= 1;
+            }
+        }
+
         if grid.can_move_entity(entity, block_state.shape, position.x, position.y, new_x, new_y) {
             grid.move_entity(entity, block_state.shape, position.x, position.y, new_x, new_y);
             position.x = new_x;
